@@ -20,16 +20,19 @@ class _RappelListViewState extends State<RappelListView> {
 
   List<Produit> items = [];
 
+  bool isLoading = false;
+
   int page = 0;
 
   @override
   void initState() {
     super.initState();
-
+    isLoading = true;
     fetchPage();
 
     controller.addListener(() {
-      if(controller.position.maxScrollExtent == controller.offset){
+      if(controller.position.maxScrollExtent <= controller.offset + 300 && !isLoading){
+        isLoading = true;
         fetchPage();
       }
     });
@@ -42,9 +45,9 @@ class _RappelListViewState extends State<RappelListView> {
   }
 
   Future fetchPage() async {
-    var tmpPage = page * 10;
+    var tmpPage = page * 20;
     final response = await http.get(
-      Uri.parse("https://data.economie.gouv.fr/api/records/1.0/search/?dataset=rappelconso0&rows=10&start=$tmpPage&sort=date_de_publication&facet=nature_juridique_du_rappel&facet=categorie_de_produit&facet=sous_categorie_de_produit&facet=nom_de_la_marque_du_produit&facet=conditionnements&facet=zone_geographique_de_vente&facet=distributeurs&facet=motif_du_rappel&facet=risques_encourus_par_le_consommateur&facet=conduites_a_tenir_par_le_consommateur&facet=modalites_de_compensation&facet=date_de_publication"),
+      Uri.parse("https://data.economie.gouv.fr/api/records/1.0/search/?dataset=rappelconso0&rows=20&start=$tmpPage&sort=date_de_publication&facet=nature_juridique_du_rappel&facet=categorie_de_produit&facet=sous_categorie_de_produit&facet=nom_de_la_marque_du_produit&facet=conditionnements&facet=zone_geographique_de_vente&facet=distributeurs&facet=motif_du_rappel&facet=risques_encourus_par_le_consommateur&facet=conduites_a_tenir_par_le_consommateur&facet=modalites_de_compensation&facet=date_de_publication"),
     );
     if (response.statusCode == 200) {
       Map<String, dynamic> map = json.decode(response.body);
@@ -56,16 +59,15 @@ class _RappelListViewState extends State<RappelListView> {
           i['fields']['nom_de_la_marque_du_produit'],
           i['fields']['noms_des_modeles_ou_references'],
           i['fields']['motif_du_rappel'],
-          i['fields']['liens_vers_les_images'],
+          (i['fields']['liens_vers_les_images'] ?? 'https://st3.depositphotos.com/23594922/31822/v/600/depositphotos_318221368-stock-illustration-missing-picture-page-for-website.jpg'),
           i['fields']['risques_encourus_par_le_consommateur'],
         );
-        print(page);
         allProduits.add(p);
       }
        setState(() {
          items.addAll(allProduits);
          page++;
-         print(page);
+         isLoading = false;
        });
     }else{
       throw Exception('Failed to load products');
@@ -82,6 +84,8 @@ class _RappelListViewState extends State<RappelListView> {
         final item = items[index];
 
         return ListTile(
+          leading: Image.network(item.images.split(' ')[0],
+              height: 150, width: 100, fit: BoxFit.cover),
           title: Text(item.nomProduit),
         );}
         else{
