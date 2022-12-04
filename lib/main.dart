@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:is_eat_safe/rappel_listview.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:is_eat_safe/views/rappel_listview.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+
+import 'bloc/produit_bloc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,7 +43,10 @@ class _MyAppState extends State<MyApp> {
                 offstage: _index != 0,
                 child: TickerMode(
                   enabled: _index == 0,
-                  child: const RappelListView(),
+                  child: BlocProvider<ProduitBloc>(
+                      create: (context) => ProduitBloc()..add(ProduitFetched()),
+                      child: const RappelListView()
+                  ),
                 ),
               ),
               Offstage(
