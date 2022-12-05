@@ -13,11 +13,11 @@ part 'produit_state.dart';
 class ProduitBloc extends Bloc<ProduitEvent, ProduitState> {
   ProduitBloc() : super(ProduitInitial()) {
     on<ProduitFetched>((event, emit) async {
-      emit(await _mapPostToState(state));
+      emit(await _mapProduitToState(state));
     });
   }
 
-  Future<ProduitState> _mapPostToState(ProduitState state) async {
+  Future<ProduitState> _mapProduitToState(ProduitState state) async {
     List<Produit> produits;
 
     try {

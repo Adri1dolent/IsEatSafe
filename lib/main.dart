@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:is_eat_safe/bloc/watchlist_bloc.dart';
 import 'package:is_eat_safe/views/rappel_listview.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
+import 'package:is_eat_safe/views/watchlist_view.dart';
 
 import 'bloc/produit_bloc.dart';
+
+final watchlistBloc = WatchlistBloc();
 
 void main() {
   runApp(const MyApp());
@@ -45,15 +49,16 @@ class _MyAppState extends State<MyApp> {
                   enabled: _index == 0,
                   child: BlocProvider<ProduitBloc>(
                       create: (context) => ProduitBloc()..add(ProduitFetched()),
-                      child: const RappelListView()
-                  ),
+                      child: const RappelListView()),
                 ),
               ),
               Offstage(
                 offstage: _index != 1,
                 child: TickerMode(
                   enabled: _index == 1,
-                  child: const MaterialApp(),
+                  child: BlocProvider<WatchlistBloc>(
+                      create: (context) => watchlistBloc,
+                      child: const WatchListView()),
                 ),
               ),
             ],
@@ -66,6 +71,7 @@ class _MyAppState extends State<MyApp> {
               child: FloatingActionButton(
                 backgroundColor: Colors.black,
                 onPressed: () async {
+                  //TODO Detailled view of the scanned product
                   var result = await BarcodeScanner.scan();
                 },
                 child: const Icon(
@@ -78,8 +84,11 @@ class _MyAppState extends State<MyApp> {
               offstage: _index != 1,
               child: FloatingActionButton(
                 backgroundColor: Colors.black,
-                onPressed: () {
-
+                onPressed: () async {
+                  //TODO Add scanned product to watchlist bloc
+                  var result = await BarcodeScanner.scan();
+                  int codebar = int.parse(result.rawContent);
+                  watchlistBloc.add(ElementToBeAdded(codebar));
                 },
                 child: const Icon(
                   Icons.add,
