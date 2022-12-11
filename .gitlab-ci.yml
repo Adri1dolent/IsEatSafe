@@ -7,7 +7,7 @@ flutter_test:
   script:
     - flutter test
   tags:
-    - flutter
+    - gitlab-ce-runner-1
 
 flutter_build_android:
   stage: build
@@ -20,4 +20,4 @@ flutter_build_android:
     paths:
       - build/app/outputs/apk/release/app-release.apk
   tags:
-    - flutter
+    - gitlab-ce-runner-1
