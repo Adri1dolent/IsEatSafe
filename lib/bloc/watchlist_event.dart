@@ -8,11 +8,20 @@ abstract class WatchlistEvent extends Equatable {
 }
 
 class ElementToBeAdded extends WatchlistEvent{
-  final int toBeAddedItemId;
+  final String toBeAddedItemId;
 
   const ElementToBeAdded(this.toBeAddedItemId);
 }
 
-class AllElementsToBeRemoved extends WatchlistEvent{
+class ElementToBeDeleted extends WatchlistEvent{
+  final WatchlistItem toBeDeletedItem;
 
+  const ElementToBeDeleted(this.toBeDeletedItem);
 }
+
+class AllElementsToBeRemoved extends WatchlistEvent{
+}
+
+class WatchlistDeleted extends WatchlistEvent{
+}
+

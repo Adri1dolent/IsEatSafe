@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:is_eat_safe/models/produit.dart';
 
+import 'models/watchlist_item.dart';
+
 class ApiUtils {
   static Future<List<Produit>> fetchPage(int page) async {
     page*=20;
@@ -28,5 +30,9 @@ class ApiUtils {
     } else {
       throw Exception('Failed to load products');
     }
+  }
+
+  static Future<WatchlistItem>? fetchWLItem(String id){
+    return null;
   }
 }

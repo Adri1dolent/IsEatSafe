@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class WatchlistItem extends Equatable{
-  int id;
+  String id;
   String nomProduit;
   String image;
 

@@ -12,11 +12,11 @@ class WatchlistInitial extends WatchlistState {
 
 class WatchlistFilled extends WatchlistState {
 
+  final List<WatchlistItem> wlItems;
+
   const WatchlistFilled({
     this.wlItems = const <WatchlistItem>[],
   });
-
-  final List<WatchlistItem> wlItems;
 
   WatchlistFilled copyWith({List<WatchlistItem>? wlItems}){
     return WatchlistFilled(
@@ -25,7 +25,7 @@ class WatchlistFilled extends WatchlistState {
   }
 
   WatchlistFilled removeAndCopy(WatchlistItem i){
-    var tmp = this.wlItems;
+    var tmp = wlItems;
     tmp.remove(i);
     return WatchlistFilled(
       wlItems: tmp
@@ -33,7 +33,7 @@ class WatchlistFilled extends WatchlistState {
   }
 
   @override
-  List<Object?> get props => [wlItems];
+  List<Object?> get props => [this.wlItems];
 }
 
 class WatchlistError extends WatchlistState{

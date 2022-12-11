@@ -11,8 +11,7 @@ class WatchListView extends StatefulWidget {
 }
 
 class _WatchListViewState extends State<WatchListView> {
-
-  late WatchlistBloc _watchlistBloc;
+   late WatchlistBloc _watchlistBloc;
 
   @override
   void initState() {
@@ -29,31 +28,48 @@ class _WatchListViewState extends State<WatchListView> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<WatchlistBloc, WatchlistState>(
-        builder: (context, state){
-          if (state is WatchlistInitial) {
-            return const Center(child:Text("To add an item to your watchlist press the \"+\" sign  below"),);
-          }
+        builder: (context, state) {
+          print("rebuild");
+      if (state is WatchlistInitial) {
+        return const Center(
+          child: Text(
+              "To add an item to your watchlist press the \"+\" sign  below"),
+        );
+      }
 
-          if (state is WatchlistFilled) {
-            if (state.wlItems.isEmpty) {
-              return const Center(child: Text("no data"),);
-            }
-            return ListView.builder(
-              itemCount: state.wlItems.length,
-              itemBuilder: (BuildContext context, int index) {
-                  final item = state.wlItems[index];
+      if (state is WatchlistFilled) {
+        return Container(
+          child: Column(
+            children: [
+              TextButton(onPressed: (){
+                _watchlistBloc.add(WatchlistDeleted());
+              },
+                  child: const Text("Delete all items")),
+              ListView.builder(
+                scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: state.wlItems.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final item = state.wlItems[index];
 
-                  return ListTile(
-                    leading: Text(item.image),
-                    title: Text(item.id.toString()),
-                  );
-                }
-            );
-          }
-          else {
-            return const Center(child: Text("erreur"),);
-          }
-        }
-    );
+                    return ListTile(
+                      leading: Text(item.image),
+                      title: Text(item.id.toString()),
+                      trailing: IconButton(
+                          icon: const Icon(Icons.delete_forever),
+                          onPressed: () {
+                            _watchlistBloc.add(ElementToBeDeleted(item));
+                          }),
+                    );
+                  }),
+            ],
+          ),
+        );
+      } else {
+        return const Center(
+          child: Text("erreur"),
+        );
+      }
+    });
   }
 }
