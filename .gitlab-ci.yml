@@ -6,8 +6,6 @@ flutter_test:
   stage: test
   script:
     - flutter test
-  tags:
-    - gitlab-ce-runner-1
 
 flutter_build_android:
   stage: build
@@ -19,5 +17,3 @@ flutter_build_android:
   artifacts:
     paths:
       - build/app/outputs/apk/release/app-release.apk
-  tags:
-    - gitlab-ce-runner-1
