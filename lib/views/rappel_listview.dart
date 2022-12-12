@@ -48,13 +48,14 @@ class _RappelListViewState extends State<RappelListView> {
 
         if (state is ProduitLoaded) {
           if (state.produits.isEmpty) {
-            return const Center(child: Text("no data"),);
+            return const Center(child: Text("Aucun produit correspondant touvé"),);
           }
           return ListView.builder(
             controller: controller,
             itemCount: (state.hasReachedMax) ? state.produits.length : state
                 .produits.length + 1,
             itemBuilder: (BuildContext context, int index) {
+
               if (index < state.produits.length) {
                 final item = state.produits[index];
 
@@ -76,7 +77,7 @@ class _RappelListViewState extends State<RappelListView> {
           );
         }
         else {
-          return const Center(child: Text("erreur"),);
+          return const Center(child: Text("Erreur"),);
         }
       },
     );

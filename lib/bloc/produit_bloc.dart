@@ -12,9 +12,21 @@ part 'produit_state.dart';
 
 class ProduitBloc extends Bloc<ProduitEvent, ProduitState> {
   ProduitBloc() : super(ProduitInitial()) {
+
     on<ProduitFetched>((event, emit) async {
       emit(await _mapProduitToState(state));
     });
+
+    on<ProduitSearched>((event, emit) async{
+      var produits = await ApiUtils.fetchPageByProductId(0, event.search);
+      emit(ProduitLoaded(produits: produits,search: event.search, hasReachedMax: (produits.length<20)));
+    });
+
+    on<ProduitRefreshed>((event, emit) async {
+      var produits = await ApiUtils.fetchPage(0);
+      emit(ProduitLoaded(produits: produits));
+    });
+
   }
 
   Future<ProduitState> _mapProduitToState(ProduitState state) async {
@@ -27,8 +39,8 @@ class ProduitBloc extends Bloc<ProduitEvent, ProduitState> {
       }
 
       ProduitLoaded produitLoaded = state as ProduitLoaded;
-      produits = await ApiUtils.fetchPage(state.page);
-      return produits.isEmpty
+      produits = await ApiUtils.fetchPageByProductId(state.page, state.search);
+      return produits.length < 20
           ? state.copyWith(hasReachedMax: true)
           : state.copyWith(produits: state.produits + produits,page: produitLoaded.page + 1);
     } catch (_) {

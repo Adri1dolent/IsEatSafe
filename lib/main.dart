@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:is_eat_safe/api_utils.dart';
 import 'package:is_eat_safe/bloc/watchlist_bloc.dart';
 import 'package:is_eat_safe/models/watchlist_item.dart';
+import 'package:is_eat_safe/views/detailled_product_view.dart';
 import 'package:is_eat_safe/views/rappel_listview.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:is_eat_safe/views/watchlist_view.dart';
@@ -11,23 +13,28 @@ import 'bloc/produit_bloc.dart';
 
 late WatchlistBloc _watchlistBloc;
 
-void main() async{
+late ProduitBloc _produitBloc;
 
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  //Get saved watchlist items id and convered them in fully exploitable WatchlistItem objetcs
   final prefs = await SharedPreferences.getInstance();
-
   final List<String> items = prefs.getStringList('watchlist_items') ?? [];
-
   List<WatchlistItem> tmp = [];
-
-  for(var e in items){
-    tmp.add(WatchlistItem(e, "nomProduit", "image"));
+  for (var e in items) {
+    tmp.add(await ApiUtils.fetchWLItem(e));
   }
 
+  //Instanciate blocs for use in multiple widgets and views
   _watchlistBloc = WatchlistBloc(prefs, tmp);
+  _produitBloc = ProduitBloc();
 
-  runApp(const MyApp());
+  runApp( MaterialApp(
+    title: 'IsEatSafe',
+    theme: ThemeData(primarySwatch: Colors.orange),
+    debugShowCheckedModeBanner: false,
+    home: const MyApp(),));
 }
 
 class MyApp extends StatefulWidget {
@@ -39,8 +46,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   int _index = 0;
-
-
+  bool _searchBoolean = false;
 
   @override
   initState() {
@@ -49,14 +55,30 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'IsEatSafe',
-      theme: ThemeData(primarySwatch: Colors.orange),
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
+    return Scaffold(
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         appBar: AppBar(
-          title: const Text('IsEatSafe'),
+          title: _searchBoolean && _index == 0 ? _searchTextField() : const Text('IsEatSafe'),
+          actions: [
+            //add
+            if (_index == 0)
+              !_searchBoolean
+                  ?  IconButton(
+                      icon: const Icon(Icons.search),
+                      onPressed: () {
+                        setState(() {
+                          _searchBoolean = true;
+                        });
+                      })
+                  : IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        setState(() {
+                          _produitBloc.add(ProduitRefreshed());
+                          _searchBoolean = false;
+                        });
+                      }),
+          ],
           toolbarHeight: 40,
         ),
         body: Stack(
@@ -66,7 +88,7 @@ class _MyAppState extends State<MyApp> {
               child: TickerMode(
                 enabled: _index == 0,
                 child: BlocProvider<ProduitBloc>(
-                    create: (context) => ProduitBloc()..add(ProduitFetched()),
+                    create: (context) => _produitBloc..add(ProduitFetched()),
                     child: const RappelListView()),
               ),
             ),
@@ -81,30 +103,37 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
-        floatingActionButton: _index == 0 ? FloatingActionButton(
-          backgroundColor: Colors.black,
-          onPressed: () async {
-            //TODO Detailled view of the scanned product
-            var result = await BarcodeScanner.scan();
-          },
-          child: const Icon(
-            Icons.qr_code_scanner,
-            color: Colors.white,
-          ),
-        ) :
-        FloatingActionButton(
-          backgroundColor: Colors.black,
-          onPressed: () async {
-            //TODO Add scanned product to watchlist bloc
-            var result = await BarcodeScanner.scan();
-            _watchlistBloc.add(ElementToBeAdded(result.rawContent));
-          },
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-          ),
-        ),
-
+        floatingActionButton: _index == 0
+            ? FloatingActionButton(
+                backgroundColor: Colors.black,
+                onPressed: () async {
+                  var result = await BarcodeScanner.scan();
+                  if(await ApiUtils.isItemRecalled(result.rawContent)){
+                    ApiUtils.getOneRecalledProduct(result.rawContent).then((value) => Navigator.push(context, MaterialPageRoute(builder: (context) => DetailledProductView(value))));
+                  }else {
+                    showDialog(
+                      context: context,
+                        builder: (_) => _productIsOkDialog(),
+                      barrierDismissible: true,
+                    );
+                  }
+                },
+                child: const Icon(
+                  Icons.qr_code_scanner,
+                  color: Colors.white,
+                ),
+              )
+            : FloatingActionButton(
+                backgroundColor: Colors.black,
+                onPressed: () async {
+                  var result = await BarcodeScanner.scan();
+                  _watchlistBloc.add(ElementToBeAdded(result.rawContent));
+                },
+                child: const Icon(
+                  Icons.add,
+                  color: Colors.white,
+                ),
+              ),
         bottomNavigationBar: BottomAppBar(
           shape: const CircularNotchedRectangle(),
           elevation: 1,
@@ -140,7 +169,57 @@ class _MyAppState extends State<MyApp> {
             ],
           ),
         ),
+      );
+  }
+
+
+  //Search bar widget to be hidden or showed if search icon is clicked
+  Widget _searchTextField() {
+    return TextField(
+      onChanged: (String s) {
+        //Emits a bloc event to trigger the search/rebuild the listview with desired query
+        _produitBloc.add(ProduitSearched(s));
+      },
+      autofocus: true,
+      //Display the keyboard when TextField is displayed
+      cursorColor: Colors.white,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 20,
       ),
+      textInputAction: TextInputAction.search,
+      //Specify the action button on the keyboard
+      decoration: const InputDecoration(
+        //Style of TextField
+        enabledBorder: UnderlineInputBorder(
+            //Default TextField border
+            borderSide: BorderSide(color: Colors.white)),
+        focusedBorder: UnderlineInputBorder(
+            //Borders when a TextField is in focus
+            borderSide: BorderSide(color: Colors.white)),
+        hintText: 'Search', //Text that is displayed when nothing is entered.
+        hintStyle: TextStyle(
+          //Style of hintText
+          color: Colors.white60,
+          fontSize: 20,
+        ),
+      ),
+    );
+  }
+
+
+  Widget _productIsOkDialog(){
+    return AlertDialog(
+      title: const Text("Produit OK"),
+      content: const Text("Selon nos informations ce produit ne fait pas l'objet d'un rappel"),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Bien reçu!'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
     );
   }
 }

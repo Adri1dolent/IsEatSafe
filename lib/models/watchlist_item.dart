@@ -1,12 +1,11 @@
 import 'package:equatable/equatable.dart';
 
-class WatchlistItem extends Equatable{
-  String id;
-  String nomProduit;
-  String image;
+class WatchlistItem {
+  final String id;
+  final String nomProduit;
+  final String image;
+  bool isRecalled;
 
-  WatchlistItem(this.id, this.nomProduit, this.image);
+  WatchlistItem(this.id, this.nomProduit, this.image, this.isRecalled);
 
-  @override
-  List<Object?> get props => [id, nomProduit, image];
 }

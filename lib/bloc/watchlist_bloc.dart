@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:is_eat_safe/api_utils.dart';
 import 'package:is_eat_safe/models/watchlist_item.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,7 +38,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
   Future<WatchlistState> _mapToStateOnAdded(
       WatchlistState state, String toBeAddedItemId) async {
     try {
-      var it = WatchlistItem(toBeAddedItemId, "nomProduit", "image");
+      var it = await ApiUtils.fetchWLItem(toBeAddedItemId);
 
       //TODO Api call to get real data
 
@@ -53,6 +54,7 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       }
       return state.copyWith(wlItems: List.of(state.wlItems)..add(it));
     } catch (e) {
+      print(e);
       return WatchlistError();
     }
   }
