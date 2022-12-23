@@ -1,3 +1,4 @@
+# Docker container with flutter installed to run on Univ-Lille's servers
 image: cirrusci/flutter
 
 stages:

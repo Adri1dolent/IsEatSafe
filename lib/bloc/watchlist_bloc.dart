@@ -40,8 +40,6 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     try {
       var it = await ApiUtils.fetchWLItem(toBeAddedItemId);
 
-      //TODO Api call to get real data
-
       if (state is WatchlistInitial) {
         var tmp = <WatchlistItem>[];
         tmp.add(it);
