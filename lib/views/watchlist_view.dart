@@ -54,9 +54,10 @@ class _WatchListViewState extends State<WatchListView> {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: const [
                           Icon(Icons.warning_amber),
-                          Text("Votre liste contient un/des produits rappelés",style: TextStyle(fontSize: 18),),
+                          Text("Produit rappelé",style: TextStyle(fontSize: 18),),
                         ],
                       ),
                     ),
