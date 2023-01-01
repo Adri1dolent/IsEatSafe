@@ -25,3 +25,6 @@ class AllElementsToBeRemoved extends WatchlistEvent{
 class WatchlistDeleted extends WatchlistEvent{
 }
 
+class CheckForRecalledItems extends WatchlistEvent{
+}
+

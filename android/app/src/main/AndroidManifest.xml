@@ -6,7 +6,7 @@
         tools:replace="android:label"
         android:label="is_eat_safe"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
 
 
         <activity

@@ -1,6 +1,4 @@
-import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -13,6 +11,8 @@ import 'package:is_eat_safe/views/detailled_product_view.dart';
 import 'package:is_eat_safe/views/rappel_listview.dart';
 import 'package:barcode_scan2/barcode_scan2.dart';
 import 'package:is_eat_safe/views/watchlist_view.dart';
+import 'package:is_eat_safe/widgets/popup_product_is_safe.dart';
+import 'package:is_eat_safe/widgets/search_textfield.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:background_fetch/background_fetch.dart';
@@ -24,8 +24,6 @@ late WatchlistBloc _watchlistBloc;
 late ProduitBloc _produitBloc;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-
 
 
 void main() async {
@@ -45,7 +43,7 @@ void main() async {
 
   runApp( MaterialApp(
     title: 'IsEatSafe',
-    theme: ThemeData(primarySwatch: Colors.orange),
+    theme: ThemeData(primarySwatch: Colors.orange, fontFamily: 'mavenpro'),
     debugShowCheckedModeBanner: false,
     home: const MyApp(),));
 
@@ -78,10 +76,11 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       appBar: AppBar(
-        title: _searchBoolean && _index == 0 ? _searchTextField() : const Text(
-            'IsEatSafe'),
+        title: _searchBoolean && _index == 0 ? SearchTextfield(produitBloc: _produitBloc,) : const Text(
+            'IsEatSafe', style: TextStyle(fontWeight: FontWeight.bold),),
         actions: [
           //add
           if (_index == 0)
@@ -130,7 +129,11 @@ class _MyAppState extends State<MyApp> {
           ? FloatingActionButton(
         backgroundColor: Colors.black,
         onPressed: () async {
+          //Scan to get detailled view of recalled product or dialog saying its not recalled
           var result = await BarcodeScanner.scan();
+          if(result.type != ResultType.Barcode || result.format != BarcodeFormat.ean13){
+            return;
+          }
           if (await ApiUtils.isItemRecalled(result.rawContent)) {
             ApiUtils.getOneRecalledProduct(result.rawContent).then((value) =>
                 Navigator.push(context, MaterialPageRoute(
@@ -138,7 +141,7 @@ class _MyAppState extends State<MyApp> {
           } else {
             showDialog(
               context: context,
-              builder: (_) => _productIsOkDialog(),
+              builder: (_) => const PopUpOk(),
               barrierDismissible: true,
             );
           }
@@ -151,7 +154,11 @@ class _MyAppState extends State<MyApp> {
           : FloatingActionButton(
         backgroundColor: Colors.black,
         onPressed: () async {
+          //Scan to add an item to the watchlist
           var result = await BarcodeScanner.scan();
+          if(result.type != ResultType.Barcode || result.format != BarcodeFormat.ean13){
+            return;
+          }
           _watchlistBloc.add(ElementToBeAdded(result.rawContent));
         },
         child: const Icon(
@@ -200,56 +207,5 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-
-  //Search bar widget to be hidden or showed if search icon is clicked
-  Widget _searchTextField() {
-    return TextField(
-      onChanged: (String s) {
-        //Emits a bloc event to trigger the search/rebuild the listview with desired query
-        _produitBloc.add(ProduitSearched(s));
-      },
-      autofocus: true,
-      //Display the keyboard when TextField is displayed
-      cursorColor: Colors.white,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 20,
-      ),
-      textInputAction: TextInputAction.search,
-      //Specify the action button on the keyboard
-      decoration: const InputDecoration(
-        //Style of TextField
-        enabledBorder: UnderlineInputBorder(
-          //Default TextField border
-            borderSide: BorderSide(color: Colors.white)),
-        focusedBorder: UnderlineInputBorder(
-          //Borders when a TextField is in focus
-            borderSide: BorderSide(color: Colors.white)),
-        hintText: 'Search', //Text that is displayed when nothing is entered.
-        hintStyle: TextStyle(
-          //Style of hintText
-          color: Colors.white60,
-          fontSize: 20,
-        ),
-      ),
-    );
-  }
-
-
-  Widget _productIsOkDialog() {
-    return AlertDialog(
-      title: const Text("Produit OK"),
-      content: const Text(
-          "Selon nos informations ce produit ne fait pas l'objet d'un rappel"),
-      actions: <Widget>[
-        TextButton(
-          child: const Text('Bien reçu!'),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-      ],
-    );
-  }
 }
 

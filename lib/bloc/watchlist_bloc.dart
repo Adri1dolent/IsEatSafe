@@ -33,6 +33,10 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       _saveWatchlistToSharedPreferences(tmp);
       emit(tmp);
     });
+
+    on<CheckForRecalledItems>((event, emit) async{
+      emit(await _updateItemsRecalledState(state));
+    });
   }
 
   Future<WatchlistState> _mapToStateOnAdded(
@@ -47,12 +51,12 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
       }
 
       state as WatchlistFilled;
+      //Cant add same element twice
       if (state.wlItems.any((element) => element.id == toBeAddedItemId)) {
         return state;
       }
       return state.copyWith(wlItems: List.of(state.wlItems)..add(it));
-    } catch (e) {
-      print(e);
+    } catch (_) {
       return WatchlistError();
     }
   }
@@ -67,10 +71,12 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     return state.copyWith(wlItems: res);
   }
 
+  //On all items deleted from watchlist
   Future<WatchlistState> _getInitialAfterListDeleted() async {
     return WatchlistInitial();
   }
 
+  //Saves items to cache, gets them back on app relaunched
   Future<void> _saveWatchlistToSharedPreferences(WatchlistState state) async {
     if (state is WatchlistInitial) {
       await prefs.remove('watchlist_items');
@@ -80,4 +86,19 @@ class WatchlistBloc extends Bloc<WatchlistEvent, WatchlistState> {
     await prefs.setStringList(
         'watchlist_items', List.of(state.wlItems.map((e) => e.id)));
   }
+
+  Future<WatchlistState> _updateItemsRecalledState(WatchlistState state) async {
+    if(state is WatchlistInitial){
+      return state;
+    }
+
+    state as WatchlistFilled;
+    List<WatchlistItem> res = List.from(state.wlItems);
+    for (var element in res) {
+      element.isRecalled = await ApiUtils.isItemRecalled(element.id);
+    }
+
+    return state.copyWith(wlItems: res);
+  }
+
 }
