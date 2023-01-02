@@ -15,6 +15,7 @@ flutter_build_android:
   before_script:
     - flutter packages get
     - flutter clean
+    - flutter pub get
     - flutter pub run flutter_launcher_icons
   script:
     - flutter build apk
