@@ -36,7 +36,7 @@ class _WatchListViewState extends State<WatchListView> {
         if (state is WatchlistInitial) {
           return const Center(
             child: Text(
-                "Pour ajouter un produit à cotre liste, cliquez sur le bouton \"+\" si dessous"),
+                "Pour ajouter un produit à cotre liste, cliquez sur le bouton \"+\" si dessous", style: TextStyle(fontWeight: FontWeight.bold),),
           );
         }
 
